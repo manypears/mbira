@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -35,6 +35,16 @@ export function Model(props) {
 
     setPreloadedSounds(sounds);
   }, []);
+
+    // **Memoize playSound so it has stable identity**
+  const playSound = useCallback((filename) => {
+    const sound = preloadedSounds[filename];
+    if (sound) {
+      sound.cloneNode().play();
+    } else {
+      console.warn(`Sound not found: ${filename}`);
+    }
+  }, [preloadedSounds]);
 
   // Key bindings for playing sounds and highlighting meshes
   useEffect(() => {
@@ -78,17 +88,8 @@ export function Model(props) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nodes, preloadedSounds]);
+  }, [nodes, playSound]);
 
-  // Play sound function
-const playSound = (filename) => {
-  const sound = preloadedSounds[filename];
-  if (sound) {
-    sound.cloneNode().play();
-  } else {
-    console.warn(`Sound not found: ${filename}`);
-  }
-};
 
   // Click handler for meshes
   const handleClick = (mesh, sound) => {
